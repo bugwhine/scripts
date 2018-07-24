@@ -1,9 +1,11 @@
 BEGIN {
-	print "Device (RCS)"
-    print "{"
-    print "	Name (_HID, "GPIO0003")"
-    print "	Name (_CRS, ResourceTemplate ()"
-    print "	{"
+	print "Scope (\\_SB.PC00)" 
+	print "{"
+	print "\tDevice (RCS)"
+    print "\t{"
+    print "\t\tName (_HID, \"GPIO0003\")"
+    print "\t\tName (_CRS, ResourceTemplate ()"
+    print "\t\t{"
     idx = 0
 }
 
@@ -48,24 +50,25 @@ BEGIN {
 # 	  {GPIO_CDF_GPP_L2 , { GpioPadModeGpio, GpioHostOwnGpio, GpioDirOut, GpioOutLow, GpioIntDis,  GpioHostDeepReset, GpioTermNone, GpioPadConfigLock}}, 
 
 	if ($0 ~ /GpioPadModeGpio/) {
-		printf "\n\t\t// %s = %c[%d] = %s\n", snr_name, community ? "E" : "W", pin, cpm_name 
+		printf "\n\t\t\t// %s = %c[%d] = %s\n", snr_name, community ? "E" : "W", pin, cpm_name 
 		if ($0 ~ /GpioIntDis/) {
 
-			printf "\t\tGpioInt (Edge, ActiveHigh, ExclusiveAndWake, PullUp, 0, \n"
-			printf "\t\t\t\"\\_SB.PC00.GPIO\", %d, ResourceConsumer, ,) { %d }\n", community, pin
+			printf "\t\t\tGpioInt (Edge, ActiveHigh, ExclusiveAndWake, PullUp, 0, \n"
+			printf "\t\t\t\t\"\\\\_SB.PC00.GPIO\", %d, ResourceConsumer, ,) { %d }\n", community, pin
 
 		} else {
 
 #  {GPIO_CDF_GPP_L2 , { GpioPadModeGpio, GpioHostOwnGpio, GpioDirOut, GpioOutLow, GpioIntDis, GpioHostDeepReset, GpioTermNone, GpioPadConfigLock}}, 
 #                GpioIo (Exclusive, PullDown, 0x0000, 0x0000, IoRestrictionOutputOnly, 
 
-			printf "\t\tGpioIo (Exclusive, "
+			printf "\t\t\tGpioIo (Exclusive, "
 			if ($0 ~ /GpioOutLow/) printf "PullDown, "
 			if ($0 ~ /GpioOutHigh/) printf "PullUp, "
 			if ($0 ~ /GpioOutDefault/)  printf "PullNone, "
+			printf "0, 0, "
 			if ($0 ~ /GpioDirOut/) printf "IoRestrictionOutputOnly, "
 			if ($0 ~ /GpioDirIn/) printf "IoRestrictionInputOnly, "
-			printf "\n\t\t\t\"\\_SB.PC00.GPIO\", %d, ResourceConsumer, ,) { %d }\n", community, pin
+			printf "\n\t\t\t\t\"\\\\_SB.PC00.GPIO\", %d, ResourceConsumer, ,) { %d }\n", community, pin
 		}
 
 		dsd[idx] = cpm_name
@@ -74,10 +77,10 @@ BEGIN {
 }
 
 END {
-	print "\t}"
-	print "\tName (_DSD, Package ()"
-    print "\t{"
-    print "\t\tToUUID (\"daffd814-6eba-4d8c-8a91-bc9bbf4aa301\"),"
+	print "\t\t})"
+	print "\t\tName (_DSD, Package ()"
+    print "\t\t{"
+    print "\t\t\tToUUID (\"daffd814-6eba-4d8c-8a91-bc9bbf4aa301\"),"
 
 #               Package ()
 #               {
@@ -85,14 +88,15 @@ END {
 #					...
 #				}, 
 
-	print "\t\tPackage ()"
-	print "\t\t{"
+	print "\t\t\tPackage ()"
+	print "\t\t\t{"
 
 	for (i=0; i < idx; i++) {
-		printf "\t\t\tPackage () { \"%s\", Package () { RCS, %d, 0, 1 } },\n", dsd[i], i
+		printf "\t\t\t\tPackage () { \"%s-gpio\", Package () { RCS, %d, 0, 1 } },\n", dsd[i], i
 	}
 
-	print "\t\t}, "
-	print "\t}"
+	print "\t\t\t}, "
+	print "\t\t})"
+    print "\t}"
     print "}"
 }
